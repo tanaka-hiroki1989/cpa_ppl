@@ -18,3 +18,12 @@ def model(data):
 
     with pyro.plate("data", data.size(0)):
         pyro.sample("obs", dist.Poisson(lambda_), obs=data)
+
+def guide(data):
+    alpha_1 = pyro.param('alpha_1', lambda: torch.tensor(0.))
+    alpha_2 = pyro.param('alpha_2', lambda: torch.tensor(1.))
+    theta = pyro.param('theta', lambda: torch.randn(70))
+    lambda_1 = pyro.sample("lambda_1", dist.Exponential(alpha_1))
+    lambda_2 = pyro.sample("lambda_2", dist.Exponential(alpha_2))
+    tau = pyro.sample("tau", dist.Categorical(torch.softmax(theta)))
+    return {"lambda_1": lambda_1, "lambda_2": lambda_2, "tau": tau}
