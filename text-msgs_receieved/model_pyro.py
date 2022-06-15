@@ -5,9 +5,12 @@ import pyro.distributions.constraints as constraints
 
 def model(data):
     N = data.size(0)
-    alpha = 1.0 / data.mean()
-    lambda1 = pyro.sample("lambda1", dist.Exponential(alpha))
-    lambda2 = pyro.sample("lambda2", dist.Exponential(alpha))
+    a1 = 1.0
+    b1 = 1.0
+    a2 = 1.0
+    b2 = 1.0
+    lambda1 = pyro.sample("lambda1", dist.Gamma(a1,b1))
+    lambda2 = pyro.sample("lambda2", dist.Gamma(a2,b2))
     pi = torch.tensor([1.0]*N)
     tau = pyro.sample("tau", dist.Categorical(torch.softmax(pi,0,dtype=torch.double)))
     lambda1_size = int(tau)
@@ -20,12 +23,16 @@ def model(data):
 
 def guide(data):
     N = data.size(0)
-    alpha1 = pyro.param('alpha1', lambda: torch.tensor(10.0,dtype=torch.double),
+    a1 = pyro.param('a1', lambda: torch.tensor(0.9,dtype=torch.double),
         constraint=constraints.positive)
-    alpha2 = pyro.param('alpha2', lambda: torch.tensor(10.0,dtype=torch.double),
+    b1 = pyro.param('b1', lambda: torch.tensor(100.0,dtype=torch.double),
+        constraint=constraints.positive)
+    a2 = pyro.param('a2', lambda: torch.tensor(1.1,dtype=torch.double),
+        constraint=constraints.positive)
+    b2 = pyro.param('b2', lambda: torch.tensor(100.0,dtype=torch.double),
         constraint=constraints.positive)
     pi = pyro.param('pi',lambda: torch.tensor([1.0]*N))
-    lambda1 = pyro.sample("lambda1", dist.Exponential(alpha1))
-    lambda2 = pyro.sample("lambda2", dist.Exponential(alpha2))
+    lambda1 = pyro.sample("lambda1", dist.Gamma(a1,b1))
+    lambda2 = pyro.sample("lambda2", dist.Gamma(a2,b2))
     tau = pyro.sample("tau", dist.Categorical(torch.softmax(pi,0,torch.double)))
     return {"lambda1": lambda1, "lambda2": lambda2, "tau": tau}
